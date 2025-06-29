@@ -1,25 +1,18 @@
-cmake_minimum_required(VERSION 3.22)
-
-#
-# This file is generated only once,
-# and is not re-generated if converter is called multiple times.
-#
-# User is free to modify the file as much as necessary
-#
+cmake_minimum_required (VERSION 3.25)
 
 # Setup compiler settings
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS ON)
 
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Define the build type
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Debug")
 endif()
-
-# Set the project name
-set(CMAKE_PROJECT_NAME Chipset.Engineering)
 
 # Include toolchain file
 include("cmake/gcc-arm-none-eabi.cmake")
@@ -28,14 +21,37 @@ include("cmake/gcc-arm-none-eabi.cmake")
 set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 
 # Enable CMake support for ASM and C languages
-enable_language(C ASM)
+enable_language(C ASM CXX)
 
 # Core project settings
-project(${CMAKE_PROJECT_NAME})
+project("PiSubmarine.Chipset.Engineering")
+set(_build_cmake_url "https://raw.githubusercontent.com/PiSubmarine/Build.CMake/main/PiSubmarine.Build.CMake.cmake")
+set(_build_cmake_local "${CMAKE_SOURCE_DIR}/PiSubmarine.Build.CMake.cmake")
+if(NOT EXISTS "${_build_cmake_local}")
+    message(STATUS "Downloading ${_build_cmake_url}...")
+    file(DOWNLOAD "${_build_cmake_url}" "${_build_cmake_local}"
+        INACTIVITY_TIMEOUT 60
+        STATUS _status
+        LOG _log
+    )
+
+    list(GET _status 0 _status_code)
+    if(NOT _status_code EQUAL 0)
+        message(FATAL_ERROR "Failed to download ${_build_cmake_url}: ${_log}")
+    endif()
+else()
+    message(STATUS "Using cached file: ${_build_cmake_local}")
+endif()
+include("${_build_cmake_local}")
+PiSubmarineInitModule()
+
+
 message("Build type: " ${CMAKE_BUILD_TYPE})
 
-# Create an executable object type
 add_executable(${CMAKE_PROJECT_NAME})
+
+PiSubmarineAddDependency("https://github.com/PiSubmarine/Bq25792" "")
+target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE "PiSubmarine.Bq25792")
 
 # Add STM32CubeMX generated sources
 add_subdirectory(cmake/stm32cubemx)
@@ -48,6 +64,7 @@ target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
 # Add sources to executable
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     "Core/App/PiSubmarine/Chipset/Engineering/AppMain.cpp"
+    "Core/App/PiSubmarine/Chipset/Engineering/Batchg.cpp"
 )
 
 # Add include paths
@@ -61,8 +78,9 @@ target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE
 )
 
 # Add linked libraries
-target_link_libraries(${CMAKE_PROJECT_NAME}
+target_link_libraries(${CMAKE_PROJECT_NAME} PUBLIC
     stm32cubemx
 
     # Add user defined libraries
 )
+

@@ -57,12 +57,22 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define REG5_SENSE_Pin GPIO_PIN_1
+#define REG5_SENSE_GPIO_Port GPIOA
+#define REGPI_SENSE_Pin GPIO_PIN_2
+#define REGPI_SENSE_GPIO_Port GPIOA
 #define BATCHG_SDA_Pin GPIO_PIN_6
 #define BATCHG_SDA_GPIO_Port GPIOA
 #define BATCHG_SCL_Pin GPIO_PIN_7
 #define BATCHG_SCL_GPIO_Port GPIOA
 #define BATCHG_INT_Pin GPIO_PIN_0
 #define BATCHG_INT_GPIO_Port GPIOB
+#define REG5_EN_Pin GPIO_PIN_12
+#define REG5_EN_GPIO_Port GPIOB
+#define REG12_EN_Pin GPIO_PIN_13
+#define REG12_EN_GPIO_Port GPIOB
+#define REG12_PG_Pin GPIO_PIN_8
+#define REG12_PG_GPIO_Port GPIOA
 
 /* USER CODE BEGIN Private defines */
 
