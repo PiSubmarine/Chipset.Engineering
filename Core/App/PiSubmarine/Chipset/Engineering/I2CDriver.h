@@ -2,6 +2,7 @@
 
 #include "main.h"
 #include <functional>
+#include <string.h>
 
 namespace PiSubmarine::Chipset::Engineering
 {
@@ -45,7 +46,9 @@ namespace PiSubmarine::Chipset::Engineering
 
 			m_LastAddress = deviceAddress;
 			m_Callback = callback;
-			auto halResult = HAL_I2C_Master_Transmit_DMA(&m_I2CHandle, deviceAddress << 1, txData, len);
+
+			memcpy(m_TransmitBuffer.data(), txData, len);
+			auto halResult = HAL_I2C_Master_Transmit_DMA(&m_I2CHandle, deviceAddress << 1, m_TransmitBuffer.data(), len);
 			return halResult == HAL_OK;
 		}
 
@@ -103,5 +106,7 @@ namespace PiSubmarine::Chipset::Engineering
 		I2C_HandleTypeDef& m_I2CHandle;
 		uint8_t m_LastAddress;
 		I2CCallback m_Callback;
+
+		std::array<uint8_t, 255> m_TransmitBuffer{0};
 	};
 }

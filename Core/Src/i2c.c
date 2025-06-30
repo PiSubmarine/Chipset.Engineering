@@ -155,7 +155,7 @@ void HAL_I2C_MspInit(I2C_HandleTypeDef* i2cHandle)
 
     /* I2C1 DMA Init */
     /* I2C1_RX Init */
-    hdma_i2c1_rx.Instance = DMA1_Channel3;
+    hdma_i2c1_rx.Instance = DMA1_Channel1;
     hdma_i2c1_rx.Init.Request = DMA_REQUEST_I2C1_RX;
     hdma_i2c1_rx.Init.Direction = DMA_PERIPH_TO_MEMORY;
     hdma_i2c1_rx.Init.PeriphInc = DMA_PINC_DISABLE;
@@ -172,7 +172,7 @@ void HAL_I2C_MspInit(I2C_HandleTypeDef* i2cHandle)
     __HAL_LINKDMA(i2cHandle,hdmarx,hdma_i2c1_rx);
 
     /* I2C1_TX Init */
-    hdma_i2c1_tx.Instance = DMA1_Channel4;
+    hdma_i2c1_tx.Instance = DMA1_Channel2;
     hdma_i2c1_tx.Init.Request = DMA_REQUEST_I2C1_TX;
     hdma_i2c1_tx.Init.Direction = DMA_MEMORY_TO_PERIPH;
     hdma_i2c1_tx.Init.PeriphInc = DMA_PINC_DISABLE;
@@ -218,7 +218,7 @@ void HAL_I2C_MspInit(I2C_HandleTypeDef* i2cHandle)
 
     /* I2C2 DMA Init */
     /* I2C2_RX Init */
-    hdma_i2c2_rx.Instance = DMA1_Channel1;
+    hdma_i2c2_rx.Instance = DMA1_Channel3;
     hdma_i2c2_rx.Init.Request = DMA_REQUEST_I2C2_RX;
     hdma_i2c2_rx.Init.Direction = DMA_PERIPH_TO_MEMORY;
     hdma_i2c2_rx.Init.PeriphInc = DMA_PINC_DISABLE;
@@ -235,7 +235,7 @@ void HAL_I2C_MspInit(I2C_HandleTypeDef* i2cHandle)
     __HAL_LINKDMA(i2cHandle,hdmarx,hdma_i2c2_rx);
 
     /* I2C2_TX Init */
-    hdma_i2c2_tx.Instance = DMA1_Channel2;
+    hdma_i2c2_tx.Instance = DMA1_Channel4;
     hdma_i2c2_tx.Init.Request = DMA_REQUEST_I2C2_TX;
     hdma_i2c2_tx.Init.Direction = DMA_MEMORY_TO_PERIPH;
     hdma_i2c2_tx.Init.PeriphInc = DMA_PINC_DISABLE;

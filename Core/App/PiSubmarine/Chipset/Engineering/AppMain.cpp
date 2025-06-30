@@ -92,7 +92,7 @@ extern "C"
 
 			if (hi2c == PiSubmarine::Chipset::Engineering::Batchg::I2C.GetHandlePtr())
 			{
-				PiSubmarine::Chipset::Engineering::Batmon::I2C.OnErrorCallback(hi2c);
+				PiSubmarine::Chipset::Engineering::Batchg::I2C.OnErrorCallback(hi2c);
 			}
 			else if (hi2c == PiSubmarine::Chipset::Engineering::Batmon::I2C.GetHandlePtr())
 			{
@@ -102,9 +102,9 @@ extern "C"
 
 		void HAL_I2C_MasterTxCpltCallback(I2C_HandleTypeDef *hi2c)
 		{
-			if (hi2c == PiSubmarine::Chipset::Engineering::Batmon::I2C.GetHandlePtr())
+			if (hi2c == PiSubmarine::Chipset::Engineering::Batchg::I2C.GetHandlePtr())
 			{
-				PiSubmarine::Chipset::Engineering::Batmon::I2C.OnMasterTxCplt(hi2c);
+				PiSubmarine::Chipset::Engineering::Batchg::I2C.OnMasterTxCplt(hi2c);
 			}
 			else if (hi2c == PiSubmarine::Chipset::Engineering::Batmon::I2C.GetHandlePtr())
 			{
@@ -114,14 +114,15 @@ extern "C"
 
 		void HAL_I2C_MasterRxCpltCallback(I2C_HandleTypeDef *hi2c)
 		{
-			if (hi2c == PiSubmarine::Chipset::Engineering::Batmon::I2C.GetHandlePtr())
+			if (hi2c == PiSubmarine::Chipset::Engineering::Batchg::I2C.GetHandlePtr())
 			{
-				PiSubmarine::Chipset::Engineering::Batmon::I2C.OnMasterRxCplt(hi2c);
+				PiSubmarine::Chipset::Engineering::Batchg::I2C.OnMasterRxCplt(hi2c);
 			}
 			else if (hi2c == PiSubmarine::Chipset::Engineering::Batmon::I2C.GetHandlePtr())
 			{
 				PiSubmarine::Chipset::Engineering::Batmon::I2C.OnMasterRxCplt(hi2c);
 			}
 		}
+
 	}
 }

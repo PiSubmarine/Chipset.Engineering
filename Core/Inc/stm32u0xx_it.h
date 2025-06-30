@@ -53,7 +53,7 @@ void PendSV_Handler(void);
 void SysTick_Handler(void);
 void DMA1_Channel1_IRQHandler(void);
 void DMA1_Channel2_3_IRQHandler(void);
-void DMA1_Ch4_7_DMA2_Ch1_5_DMAMUX_OVR_IRQHandler(void);
+void DMA1_Ch4_7_DMAMUX_OVR_IRQHandler(void);
 void I2C1_IRQHandler(void);
 void I2C2_3_IRQHandler(void);
 /* USER CODE BEGIN EFP */

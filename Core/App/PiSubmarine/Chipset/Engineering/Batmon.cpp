@@ -14,6 +14,7 @@
 #include "I2CDriver.h"
 
 using namespace PiSubmarine::Max1726;
+using namespace PiSubmarine::RegUtils;
 
 namespace PiSubmarine::Chipset::Engineering
 {
@@ -45,7 +46,6 @@ namespace PiSubmarine::Chipset::Engineering
 		return TransactionWait(device);
 	}
 
-
 	bool Batmon::WriteDirtyBlocking(Max1726::Device<I2CDriver> &device)
 	{
 		if (!device.WriteDirty())
@@ -76,7 +76,23 @@ namespace PiSubmarine::Chipset::Engineering
 		}
 
 		auto status = Device.GetStatus();
-		printf("Status: %u", static_cast<uint16_t>(status));
+		printf("Status (before reset): %u\n", static_cast<uint16_t>(status));
+		Device.SetStatus(status & ~(Status::PowerOnReset | Status::StateOfChargeChanged));
+
+
+		// auto halResult = HAL_I2C_Master_Transmit_DMA(&m_I2CHandle, deviceAddress << 1, m_TransmitBuffer.data(), len);
+
+		if (!WriteDirtyBlocking(Device))
+		{
+			return;
+		}
+
+		if (!ReadBlocking(Device))
+		{
+			return;
+		}
+		status = Device.GetStatus();
+		printf("Status (after reset): %u\n", static_cast<uint16_t>(status));
 	}
 
 	void Batmon::TestRepeat()
@@ -85,6 +101,4 @@ namespace PiSubmarine::Chipset::Engineering
 	}
 
 }
-
-
 
