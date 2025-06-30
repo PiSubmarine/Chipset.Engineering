@@ -45,7 +45,8 @@ namespace PiSubmarine::Chipset::Engineering
 
 			m_LastAddress = deviceAddress;
 			m_Callback = callback;
-			return HAL_I2C_Master_Transmit_DMA(&m_I2CHandle, deviceAddress << 1, txData, len) == HAL_OK;
+			auto halResult = HAL_I2C_Master_Transmit_DMA(&m_I2CHandle, deviceAddress << 1, txData, len);
+			return halResult == HAL_OK;
 		}
 
 		void OnMasterTxCplt(I2C_HandleTypeDef *hi2c)
@@ -55,12 +56,12 @@ namespace PiSubmarine::Chipset::Engineering
 				return;
 			}
 
-			if(m_Callback)
-			{
-				m_Callback(m_LastAddress, true);
-			}
-
+			auto cb = m_Callback;
 			m_Callback = nullptr;
+			if(cb)
+			{
+				cb(m_LastAddress, true);
+			}
 		}
 
 		void OnMasterRxCplt(I2C_HandleTypeDef *hi2c)
@@ -70,12 +71,12 @@ namespace PiSubmarine::Chipset::Engineering
 				return;
 			}
 
-			if(m_Callback)
-			{
-				m_Callback(m_LastAddress, true);
-			}
-
+			auto cb = m_Callback;
 			m_Callback = nullptr;
+			if(cb)
+			{
+				cb(m_LastAddress, true);
+			}
 		}
 
 		void OnErrorCallback(I2C_HandleTypeDef *hi2c)
@@ -85,12 +86,12 @@ namespace PiSubmarine::Chipset::Engineering
 				return;
 			}
 
-			if(m_Callback)
-			{
-				m_Callback(m_LastAddress, false);
-			}
-
+			auto cb = m_Callback;
 			m_Callback = nullptr;
+			if(cb)
+			{
+				cb(m_LastAddress, false);
+			}
 		}
 
 		I2C_HandleTypeDef* GetHandlePtr() const

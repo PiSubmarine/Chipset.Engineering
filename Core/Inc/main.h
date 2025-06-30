@@ -73,6 +73,10 @@ void Error_Handler(void);
 #define REG12_EN_GPIO_Port GPIOB
 #define REG12_PG_Pin GPIO_PIN_8
 #define REG12_PG_GPIO_Port GPIOA
+#define RPI_SCL_Pin GPIO_PIN_6
+#define RPI_SCL_GPIO_Port GPIOB
+#define RPI_SDA_Pin GPIO_PIN_7
+#define RPI_SDA_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 

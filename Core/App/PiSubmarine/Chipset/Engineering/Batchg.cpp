@@ -19,107 +19,251 @@ using namespace PiSubmarine::Bq25792;
 namespace PiSubmarine::Chipset::Engineering
 {
 
-	I2CDriver Batchg::BatchgI2C { hi2c2 };
+	I2CDriver Batchg::I2C { hi2c2 };
+	Device<I2CDriver> Batchg::Device { I2C };
 
-	void Batchg::TestOnce()
+	bool Batchg::TransactionWait(Bq25792::Device<I2CDriver> &charger)
 	{
-		HAL_Delay(500);
-
-		Bq25792::Bq25792<I2CDriver> charger { BatchgI2C };
-		if (!charger.Read())
-		{
-			printf("[BATCHG] Read failed to start transaction\n");
-			return;
-		}
-		while (charger.IsDirty())
+		while (charger.IsTransactionInProgress())
 		{
 
 		}
 		if (charger.HasError())
 		{
 			printf("[BATCHG] Read I2C error\n");
+			return false;
+		}
+		return true;
+	}
+
+	bool Batchg::ReadBlocking(Bq25792::Device<I2CDriver> &charger)
+	{
+		if (!charger.Read())
+		{
+			printf("[BATCHG] Read failed to start transaction\n");
+			return false;
+		}
+		return TransactionWait(charger);
+	}
+
+	bool Batchg::WriteBlocking(Bq25792::Device<I2CDriver> &charger)
+	{
+		if (!charger.Write())
+		{
+			printf("[BATCHG] Write failed to start transaction\n");
+			return false;
+		}
+		return TransactionWait(charger);
+	}
+
+	bool Batchg::WriteDirtyBlocking(Bq25792::Device<I2CDriver> &charger)
+	{
+		if (!charger.WriteDirty())
+		{
+			printf("[BATCHG] Write failed to start transaction\n");
+			return false;
+		}
+		return TransactionWait(charger);
+	}
+
+	bool Batchg::WriteBlocking(Bq25792::Device<I2CDriver> &charger, PiSubmarine::Bq25792::RegOffset reg)
+	{
+		if (!charger.Write(reg))
+		{
+			printf("[BATCHG] Write failed to start transaction\n");
+			return false;
+		}
+		return TransactionWait(charger);
+	}
+
+	void Batchg::TestOnce()
+	{
+		HAL_Delay(500);
+
+		if (!ReadBlocking(Device))
+		{
 			return;
 		}
-		auto vsysMin = charger.GetMinimalSystemVoltage();
+
+		auto vsysMin = Device.GetMinimalSystemVoltage();
 		printf("[BATCHG] REG00_Minimal_System_Voltage\n");
 		printf("[BATCHG]\tVSYSMIN: %ld mV\n", vsysMin.Value);
-		/*
 
-		 Reg03ChargeCurrentLimit chargeCurrentLimit;
-		 ReadRegister(chargeCurrentLimit, batchgRegs);
-		 chargeCurrentLimit.SetChargeCurrentLimit(3000_mA);
-		 auto chargeCurrentLimitBytes = chargeCurrentLimit.GetOffsetAndData();
-		 if (HAL_I2C_Master_Transmit(&hi2c2, BatchgAddress << 1, chargeCurrentLimitBytes.data(), chargeCurrentLimitBytes.size(), HAL_MAX_DELAY) != HAL_OK)
-		 {
-		 printf("[BATCHG] HAL_I2C_Master_Transmit: FAILED\n");
-		 return;
-		 }
+		auto ichg = Device.GetChargeCurrentLimit();
+		printf("[BATCHG] REG03_Charge_Current_Limit\n");
+		printf("[BATCHG]\tICHG: %ld mA\n", ichg.Value);
 
-		 Bq25792::Reg14ChargerControl5 chargerControl5;
-		 ReadRegister(chargerControl5, batchgRegs);
-		 chargerControl5.EnIbat.Set(true);
-		 auto chargerControl5Bytes = chargerControl5.GetOffsetAndData();
-		 if (HAL_I2C_Master_Transmit(&hi2c2, BatchgAddress << 1, chargerControl5Bytes.data(), chargerControl5Bytes.size(), HAL_MAX_DELAY) != HAL_OK)
-		 {
-		 printf("[BATCHG] HAL_I2C_Master_Transmit: FAILED\n");
-		 return;
-		 }
+		Device.SetChargeCurrentLimit(3000_mA);
+		Device.SetTsIgnore(true);
+		Device.SetAdcEnabled(true);
+		Device.SetDischargeOcpEnabled(true);
+		Device.SetDischargeCurrentSensingEnabled(true);
+		Device.SetIlimHizCurrentLimitEnabled(false);
+		if (!WriteDirtyBlocking(Device))
+		{
+			return;
+		}
 
-		 Bq25792::Reg18NtcControl1 ntcControl1;
-		 ReadRegister(ntcControl1, batchgRegs);
-		 ntcControl1.TsIgnore.Set(true);
-		 auto ntcControl1Bytes = ntcControl1.GetOffsetAndData();
-		 if (HAL_I2C_Master_Transmit(&hi2c2, BatchgAddress << 1, ntcControl1Bytes.data(), ntcControl1Bytes.size(), HAL_MAX_DELAY) != HAL_OK)
-		 {
-		 printf("[BATCHG] HAL_I2C_Master_Transmit: FAILED\n");
-		 return;
-		 }
+		if (!ReadBlocking(Device))
+		{
+			return;
+		}
+		auto ichgNew = Device.GetChargeCurrentLimit();
+		printf("[BATCHG] REG03_Charge_Current_Limit\n");
+		printf("[BATCHG]\tICHG: %ld mA\n", ichgNew.Value);
 
-		 Bq25792::Reg2EAdcControl adcControl;
-		 ReadRegister(adcControl, batchgRegs);
-		 adcControl.AdcEn.Set(true);
-		 adcControl.AdcSampleSpeed.Set(0);
-		 auto adcControlBytes = adcControl.GetOffsetAndData();
-		 if (HAL_I2C_Master_Transmit(&hi2c2, BatchgAddress << 1, adcControlBytes.data(), adcControlBytes.size(), HAL_MAX_DELAY) != HAL_OK)
-		 {
-		 printf("[BATCHG] HAL_I2C_Master_Transmit: FAILED\n");
-		 return;
-		 }
-
-		 regStart = 0x00;
-		 if (HAL_I2C_Master_Transmit(&hi2c2, BatchgAddress << 1, &regStart, 1, HAL_MAX_DELAY) != HAL_OK)
-		 {
-		 printf("[BATCHG] HAL_I2C_Master_Transmit: FAILED\n");
-		 return;
-		 }
-
-		 if (HAL_I2C_Master_Receive(&hi2c2, BatchgAddress << 1, batchgRegs.data(), batchgRegs.size(), HAL_MAX_DELAY) != HAL_OK)
-		 {
-		 printf("[BATCHG] HAL_I2C_Master_Receive: FAILED\n");
-		 return;
-		 }
-
-		 Reg00MinimalSystemVoltage reg00;
-		 ReadRegister(reg00, batchgRegs);
-		 printf("[BATCHG] REG00_Minimal_System_Voltage\n");
-		 printf("[BATCHG]\tVSYSMIN: %ld mV\n", reg00.GetMinimalSystemVoltage().Value);
-
-		 Reg01ChargeVoltageLimit reg01;
-		 ReadRegister(reg01, batchgRegs);
-		 printf("[BATCHG] REG01_Charge_Voltage_Limit\n");
-		 printf("[BATCHG]\tVREG: %ld mV\n", reg01.GetBatteryVoltageLimit().Value);
-
-		 Reg03ChargeCurrentLimit reg03;
-		 ReadRegister(reg03, batchgRegs);
-		 printf("[BATCHG] REG03_Charge_Current_Limit\n");
-		 printf("[BATCHG]\tICHG: %ld mA\n", reg03.GetChargeCurrentLimit().Value);
-
-		 printf("\n");
-		 */
+		printf("\n");
 	}
 
 	void Batchg::TestRepeat()
 	{
+		Device.SetWdRst(true);
+
+		if(!WriteDirtyBlocking(Device))
+		{
+			return;
+		}
+
+		if (!ReadBlocking(Device))
+		{
+			return;
+		}
+
+		ChargerStatus0Flags status0 = Device.GetChargerStatus0();
+		printf("[BATCHG] REG1B_Charger_Status_0:\n");
+		if (RegUtils::HasAnyFlag(status0, ChargerStatus0Flags::VbusPresentStat))
+		{
+			printf("[BATCHG]\tVBUS Present\n");
+		}
+		if (RegUtils::HasAnyFlag(status0, ChargerStatus0Flags::PoorSrcStat))
+		{
+			printf("[BATCHG]\tPoor Source\n");
+		}
+		if (RegUtils::HasAnyFlag(status0, ChargerStatus0Flags::PgStat))
+		{
+			printf("[BATCHG]\tPowerGood\n");
+		}
+
+		printf("[BATCHG] REG1C_Charger_Status_1.\n");
+		auto chargeStatus = Device.GetChargeStatus();
+		printf("[BATCHG]\tCHG_STAT: ");
+		switch (chargeStatus)
+		{
+		case ChargeStatus::NotCharging:
+			printf("Not Charging\n");
+			break;
+		case ChargeStatus::TrickleCharge:
+			printf("Trickle Charge\n");
+			break;
+		case ChargeStatus::PreCharge:
+			printf("Pre-charge\n");
+			break;
+		case ChargeStatus::FastCharge:
+			printf("Fast charge (CC mode)\n");
+			break;
+		case ChargeStatus::TaperCharge:
+			printf("Taper charge (CV mode)\n");
+			break;
+		case ChargeStatus::TopOffTimerActiveCharging:
+			printf("Top-off timer active charging\n");
+			break;
+		case ChargeStatus::ChargindTerminationDone:
+			printf("Charging termination done\n");
+			break;
+		}
+		printf("[BATCHG]\tVBUS_STAT: ");
+		auto vbusStatus = Device.GetVbusStatus();
+		switch (vbusStatus)
+		{
+		case VbusStatus::NoInputOrBhotOrBcold:
+			printf("No Input or BHOT or BCOLD in OTG mode\n");
+			break;
+		case VbusStatus::UsbSdp:
+			printf("USB SDP (500mA)\n");
+			break;
+		case VbusStatus::UsbCdp:
+			printf("USB CDP (1.5A)\n");
+			break;
+		case VbusStatus::UsbDcp:
+			printf("USB DCP (3.25A)\n");
+			break;
+		case VbusStatus::HvDcp:
+			printf("Adjustable High Voltage DCP (HVDCP) (1.5A)\n");
+			break;
+		case VbusStatus::UnknownAdapter:
+			printf("Unknown adaptor (3A)\n");
+			break;
+		case VbusStatus::NonStandardAdapter:
+			printf("Non-Standard Adapter (1A/2A/2.1A/2.4A)\n");
+			break;
+		case VbusStatus::Otg:
+			printf("In OTG mode\n");
+			break;
+		case VbusStatus::NotQualifiedAdaptor:
+			printf("Not qualified adaptor\n");
+			break;
+		case VbusStatus::PoweredFromVbus:
+			printf("Device directly powered from VBUS\n");
+			break;
+		default:
+			printf("RESERVED\n");
+		}
+
+		printf("[BATCHG] REG1D_Charger_Status_2.\n");
+		auto icoStat = Device.GetIcoStatus();
+		printf("[BATCHG]\tICO_STAT: ");
+		switch (icoStat)
+		{
+		case IcoStatus::IcoDisabled:
+			printf("ICO disabled\n");
+			break;
+		case IcoStatus::IcoOptimizationInProgress:
+			printf("ICO optimization in progress\n");
+			break;
+		case IcoStatus::MaximumInputCurrent:
+			printf("Maximum input current detected\n");
+			break;
+		default:
+			printf("RESERVED\n");
+			break;
+		}
+
+		if (Device.IsInThermalRegulation())
+		{
+			printf("[BATCHG]\tDevice in thermal regulation\n");
+		}
+		if (Device.IsBatteryPresent())
+		{
+			printf("[BATCHG]\tBattery connected\n");
+		}
+		else
+		{
+			printf("[BATCHG]\tBattery disconnected\n");
+		}
+
+		auto ibusAdc = Device.GetIbusCurrent();
+		printf("[BATCHG] REG31_IBUS_ADC: %ld mA\n", ibusAdc.Value);
+
+		auto ibatAdc = Device.GetIbatCurrent();
+		printf("[BATCHG] REG33_IBAT_ADC: %ld mA\n", ibatAdc.Value);
+
+		auto vbusAdc = Device.GetVbusVoltage();
+		printf("[BATCHG] REG35_VBUS_ADC: %ld mV\n", vbusAdc.Value);
+
+		auto vbatAdc = Device.GetVbatVoltage();
+		printf("[BATCHG] REG3B_VBAT_ADC: %ld mV\n", vbatAdc.Value);
+
+		auto vsysAdc = Device.GetVsysVoltage();
+		printf("[BATCHG] REG3D_VSYS_ADC: %ld mV\n", vsysAdc.Value);
+
+		auto tsAdc = Device.GetTsPercentage();
+		printf("[BATCHG] REG3F_TS_ADC: %d%%\n", static_cast<int>(tsAdc * 0.0976563));
+
+		auto tdieAdc = Device.GetDieTemperature();
+		printf("[BATCHG] REG41_TDIE_ADC: %ld C\n", tdieAdc.Halves / 2);
+
+		printf("\n");
+
 		/*
 		 std::array<uint8_t, 0x49> batchgRegs { 0 };
 		 std::array<uint8_t, 3> regData { 0 };
@@ -307,55 +451,5 @@ namespace PiSubmarine::Chipset::Engineering
 		 */
 	}
 
-}
-
-extern "C"
-{
-	void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hi2c)
-	{
-		uint32_t error = HAL_I2C_GetError(hi2c);
-
-		if (error & HAL_I2C_ERROR_BERR)
-		{
-			// Handle Bus Error
-		}
-		if (error & HAL_I2C_ERROR_ARLO)
-		{
-			// Handle Arbitration Lost
-		}
-		if (error & HAL_I2C_ERROR_AF)
-		{
-			// Handle Acknowledge Failure
-		}
-		if (error & HAL_I2C_ERROR_OVR)
-		{
-			// Handle Overrun/Underrun
-		}
-		if (error & HAL_I2C_ERROR_TIMEOUT)
-		{
-			// Handle Timeout
-		}
-
-		if (hi2c == PiSubmarine::Chipset::Engineering::Batchg::BatchgI2C.GetHandlePtr())
-		{
-			PiSubmarine::Chipset::Engineering::Batchg::BatchgI2C.OnErrorCallback(hi2c);
-		}
-	}
-
-	void HAL_I2C_MasterTxCpltCallback(I2C_HandleTypeDef *hi2c)
-	{
-		if (hi2c == PiSubmarine::Chipset::Engineering::Batchg::BatchgI2C.GetHandlePtr())
-		{
-			PiSubmarine::Chipset::Engineering::Batchg::BatchgI2C.OnMasterTxCplt(hi2c);
-		}
-	}
-
-	void HAL_I2C_MasterRxCpltCallback(I2C_HandleTypeDef *hi2c)
-	{
-		if (hi2c == PiSubmarine::Chipset::Engineering::Batchg::BatchgI2C.GetHandlePtr())
-		{
-			PiSubmarine::Chipset::Engineering::Batchg::BatchgI2C.OnMasterRxCplt(hi2c);
-		}
-	}
 }
 

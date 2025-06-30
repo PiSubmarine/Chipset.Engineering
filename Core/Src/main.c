@@ -96,6 +96,7 @@ int main(void)
   MX_USART1_UART_Init();
   MX_LPTIM2_Init();
   MX_ADC1_Init();
+  MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
   AppMainRun(NULL);
   /* USER CODE END 2 */
