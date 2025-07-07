@@ -10,6 +10,7 @@
 #include <cstdint>
 #include "i2c.h"
 #include "I2CDriver.h"
+#include "PiSubmarine/Max1726/MicroAmpereHours.h"
 #include "PiSubmarine/Max1726/Max1726.h"
 
 namespace PiSubmarine::Chipset::Engineering
@@ -17,7 +18,9 @@ namespace PiSubmarine::Chipset::Engineering
 	class Batmon
 	{
 	public:
-		constexpr static uint8_t BatchgAddress = 0x6B;
+		static constexpr Max1726::MicroAmpereHours capacity{3500000};
+		static constexpr Max1726::MicroAmperes terminationCurrent{200000};
+		static constexpr Max1726::MicroVolts emptyVoltage {3500000};
 
 		static void TestOnce();
 		static void TestRepeat();
